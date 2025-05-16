@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Game Seru Buat Kamu</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
+
+  body {
+    margin: 0;
+    background: linear-gradient(135deg, #f9d5e5, #fcd5ce);
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    overflow-x: hidden;
+    user-select: none;
+  }
+
+  h1 {
+    margin: 20px 0 0 0;
+    color: #d6336c;
+    text-shadow: 1px 1px 2px #ffcee4;
+    font-size: 1.8rem;
+    text-align: center;
+    padding: 0 10px;
+  }
+
+  #gameContainer {
+    position: relative;
+    margin-top: 20px;
+    width: 90vw;
+    max-width: 360px;
+    height: 480px;
+    background: #fff4f9;
+    border-radius: 20px;
+    box-shadow: 0 10px 20px rgba(214, 51, 108, 0.3);
+    overflow: hidden;
+    border: 4px solid #d6336c;
+    touch-action: none;
+  }
+
+  #scoreBoard {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-weight: 700;
+    font-size: 18px;
+    color: #d6336c;
+    z-index: 10;
+  }
+
+  #message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 20px;
+    font-weight: 700;
+    color: #bd135d;
+    text-align: center;
+    padding: 0 15px;
+    min-height: 60px;
+    z-index: 20;
+    user-select: none;
+    line-height: 1.4;
+    display: none;
+    word-break: break-word;
+  }
+
+  #basket {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    max-width: 90%;
+    height: 40px;
+    background: #d6336c;
+    border-radius: 40px 40px 20px 20px;
+    box-shadow: 0 4px 10px rgba(214, 51, 108, 0.5);
+    z-index: 15;
+  }
+
+  #basket:after {
+    content: "";
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 40px;
+    background: #f9d5e5;
+    border-radius: 50%;
+    box-shadow: inset 0 5px 8px #ddb7c2;
+  }
+
+  .compliment {
+    position: absolute;
+    font-weight: 600;
+    color: #d6336c;
+    user-select: none;
+    text-shadow: 1px 1px 1px rgba(255, 192, 203, 0.7);
+    font-size: 14px;
+    pointer-events: none;
+    max-width: 120px;
+    word-wrap: break-word;
+    z-index: 10;
+  }
+
+  #instructions {
+    margin-top: 10px;
+    color: #d6336c;
+    font-weight: 600;
+    max-width: 360px;
+    text-align: center;
+    font-size: 14px;
+    padding: 0 10px;
+  }
+
+  #restartBtn {
+    margin-top: 15px;
+    background-color: #bd135d;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 30px;
+    color: white;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(189, 19, 93, 0.7);
+    transition: background-color 0.3s ease;
+  }
+
+  #restartBtn:hover {
+    background-color: #d6336c;
+  }
+
+  /* Mobile control buttons container */
+  #controlButtons {
+    margin-top: 15px;
+    max-width: 360px;
+    width: 90vw;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .control-btn {
+    flex: 1;
+    margin: 0 5px;
+    background-color: #d6336c;
+    border: none;
+    border-radius: 50%;
+    height: 60px;
+    color: white;
+    font-size: 30px;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 4px 10px rgba(214, 51, 108, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+  }
+
+  .control-btn:active,
+  .control-btn:hover {
+    background-color: #bd135d;
+  }
+
+  @media (hover: none) {
+    .control-btn:hover {
+      background-color: #d6336c;
+    }
+  }
+
+</style>
+</head>
+<body>
+  <h1>Game Balikin Mood Pacar</h1>
+  <div id="gameContainer">
+    <div id="scoreBoard">Skor: 0</div>
+    <div id="message"></div>
+    <div id="basket"></div>
+  </div>
+  <div id="instructions">
+    Gunakan tombol <b>kiri</b> dan <b>kanan</b> di bawah untuk menangkap kata-kata manis yang jatuh yaaa sayaaangg<br />
+  </div>
+  <button id="restartBtn">Mulai Main</button>
+
+  <div id="controlButtons" aria-label="Kontrol permainan">
+    <button id="leftBtn" class="control-btn" aria-label="Gerakkan ke kiri">◀</button>
+    <button id="rightBtn" class="control-btn" aria-label="Gerakkan ke kanan">▶</button>
+  </div>
+
+  <script>
+    (function () {
+      const gameContainer = document.getElementById('gameContainer');
+      const basket = document.getElementById('basket');
+      const scoreBoard = document.getElementById('scoreBoard');
+      const message = document.getElementById('message');
+      const restartBtn = document.getElementById('restartBtn');
+      const leftBtn = document.getElementById('leftBtn');
+      const rightBtn = document.getElementById('rightBtn');
+
+      const compliments = [
+        "Kamu cantik banget!",
+        "Senyum kamu manis!",
+        "Aku sayang kamu!",
+        "Kamu luar biasa!",
+        "Kamu selalu bikin aku bahagia",
+        "Aku bangga sama kamu!",
+        "Kamu bintangku",
+        "Makan kamu bikin ketagihan!",
+        "Kamu yang terbaik!",
+        "Peluk kamu hangat banget!",
+        "Kamu bikin hati aku meleleh",
+        "Kamu spesial buat aku",
+        "Aku kangen kamu terus",
+        "Kamu pahlawan hatiku!",
+        "Kamu juara!",
+        "Kamu manis banget",
+        "Aku suka cara kamu tertawa",
+        "Kamu inspirasi aku",
+        "Kamu bikin dunia cerah",
+        "Kamu segalanya buat aku"
+      ];
+
+      const finalMessages = [
+        "Kamu juara hatiku! ❤️🥇",
+        "Kamu bikin aku ngakak sekaligus melting! 😂😍",
+        "Cintaku padamu secepat catching compliment ini! 💨💖",
+        "Kamu bintang jatuh yang selalu kujaga! 🌟😘",
+        "Kalau aku jadi emoji, pasti ini nih: 😍🤣❤️",
+        "Kamu mood booster terbaikku! 🔥💓",
+        "Kamu kaya WiFi, selalu bikin koneksi hati kuat! 📶❤️",
+        "Kamu lucu dan manis, combo sempurna! 🍬😂",
+        "Masalah hilang kalau sama kamu! 💪💕",
+        "Kamu superhero di hatiku! 🦸‍♀️💘"
+      ];
+
+      let basketPosX = (gameContainer.clientWidth - basket.clientWidth) / 2;
+      basket.style.left = basketPosX + 'px';
+      const basketSpeed = 20;
+
+      let complimentsFalling = [];
+      let score = 0;
+      let gameInterval;
+      let fallInterval;
+      let isGameOver = true; // initially game not running
+
+      // For continuous movement on holding buttons on mobile
+      let leftPressed = false;
+      let rightPressed = false;
+      let controlInterval;
+
+      function createCompliment() {
+        const comp = document.createElement('div');
+        comp.className = 'compliment';
+        comp.textContent = compliments[Math.floor(Math.random() * compliments.length)];
+        comp.style.left = Math.random() * (gameContainer.clientWidth - 120) + 'px';
+        comp.style.top = '-30px';
+        gameContainer.appendChild(comp);
+        complimentsFalling.push({el: comp, y: -30});
+      }
+
+      function updateCompliments() {
+        for (let i = complimentsFalling.length - 1; i >= 0; i--) {
+          const compObj = complimentsFalling[i];
+          compObj.y += 2; // speed of falling
+          compObj.el.style.top = compObj.y + 'px';
+
+          // Check if caught by basket
+          const compRect = compObj.el.getBoundingClientRect();
+          const basketRect = basket.getBoundingClientRect();
+
+          if (
+            compRect.bottom >= basketRect.top &&
+            compRect.left + compRect.width / 2 >= basketRect.left &&
+            compRect.left + compRect.width / 2 <= basketRect.right
+          ) {
+            // caught
+            score++;
+            scoreBoard.textContent = "Skor: " + score;
+            showMessage(compObj.el.textContent);
+            // remove caught compliment
+            gameContainer.removeChild(compObj.el);
+            complimentsFalling.splice(i, 1);
+
+            // Check if score reached 20
+            if (score >= 20) {
+              stopGame(true);
+            }
+          } else if (compObj.y > gameContainer.clientHeight) {
+            // missed compliment, remove it
+            gameContainer.removeChild(compObj.el);
+            complimentsFalling.splice(i, 1);
+          }
+        }
+      }
+
+      function showMessage(text) {
+        message.textContent = text;
+        if (!isGameOver) {
+          setTimeout(() => {
+            // Only clear if game still running and message is not final message
+            if (!isGameOver || message.textContent === text) {
+              message.textContent = '';
+            }
+          }, 2000);
+        }
+      }
+
+      function gameLoop() {
+        updateCompliments();
+      }
+
+      function moveBasketLeft() {
+        basketPosX = Math.max(0, basketPosX - basketSpeed);
+        basket.style.left = basketPosX + 'px';
+      }
+
+      function moveBasketRight() {
+        basketPosX = Math.min(gameContainer.clientWidth - basket.clientWidth, basketPosX + basketSpeed);
+        basket.style.left = basketPosX + 'px';
+      }
+
+      function startGame() {
+        score = 0;
+        scoreBoard.textContent = "Skor: 0";
+        isGameOver = false;
+        restartBtn.textContent = "Berhenti";
+        message.style.display = 'none';
+        message.textContent = '';
+        complimentsFalling.forEach(compObj => {
+          gameContainer.removeChild(compObj.el);
+        });
+        complimentsFalling = [];
+
+        // Show basket and score
+        basket.style.display = 'block';
+        scoreBoard.style.display = 'block';
+
+        // Reset basket to center
+        basketPosX = (gameContainer.clientWidth - basket.clientWidth) / 2;
+        basket.style.left = basketPosX + 'px';
+
+        // Start creating compliments every 1.3 seconds
+        fallInterval = setInterval(createCompliment, 1300);
+        // Start game loop at 60fps approx
+        gameInterval = setInterval(gameLoop, 16);
+
+        // Start control interval for continuous movement (mobile)
+        controlInterval = setInterval(() => {
+          if (leftPressed) moveBasketLeft();
+          if (rightPressed) moveBasketRight();
+        }, 50);
+      }
+
+      // stopGame parameter isFinal to differentiate normal stop vs score 20 stop
+      function stopGame(isFinal = false) {
+        clearInterval(fallInterval);
+        clearInterval(gameInterval);
+        clearInterval(controlInterval);
+        isGameOver = true;
+        restartBtn.textContent = "Mulai Main";
+
+        // Hide basket and compliments
+        basket.style.display = 'none';
+        complimentsFalling.forEach(compObj => {
+          gameContainer.removeChild(compObj.el);
+        });
+        complimentsFalling = [];
+
+        if (isFinal) {
+          // show romantic and funny final message centered
+          const finalMsg = finalMessages[Math.floor(Math.random() * finalMessages.length)];
+          message.textContent = finalMsg;
+          message.style.display = 'block';
+          scoreBoard.style.display = 'none';
+        } else {
+          message.style.display = 'block';
+          message.textContent = 'Wah, mood sudah mulai bagus nih! Skor terakhir: ' + score;
+          scoreBoard.style.display = 'block';
+        }
+      }
+
+      // Control basket movement with keyboard
+      window.addEventListener('keydown', function(event) {
+        if (isGameOver) return;
+        if (event.key === 'ArrowLeft') {
+          moveBasketLeft();
+        }
+        if (event.key === 'ArrowRight') {
+          moveBasketRight();
+        }
+      });
+
+      // Control basket movement with mobile buttons
+      leftBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (isGameOver) return;
+        leftPressed = true;
+      });
+      leftBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        leftPressed = false;
+      });
+      leftBtn.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        if (isGameOver) return;
+        leftPressed = true;
+      });
+      leftBtn.addEventListener('mouseup', (e) => {
+        e.preventDefault();
+        leftPressed = false;
+      });
+      leftBtn.addEventListener('mouseleave', (e) => {
+        e.preventDefault();
+        leftPressed = false;
+      });
+
+      rightBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (isGameOver) return;
+        rightPressed = true;
+      });
+      rightBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        rightPressed = false;
+      });
+      rightBtn.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        if (isGameOver) return;
+        rightPressed = true;
+      });
+      rightBtn.addEventListener('mouseup', (e) => {
+        e.preventDefault();
+        rightPressed = false;
+      });
+      rightBtn.addEventListener('mouseleave', (e) => {
+        e.preventDefault();
+        rightPressed = false;
+      });
+
+      // Restart button click toggles game start/stop
+      restartBtn.addEventListener('click', function () {
+        if (isGameOver) {
+          startGame();
+        } else {
+          stopGame();
+        }
+      });
+
+      // Auto stop game after 60 seconds to avoid endless
+      setInterval(() => {
+        if (!isGameOver) stopGame();
+      }, 60000);
+
+    })();
+  </script>
+</body>
+</html>
